@@ -175,6 +175,15 @@ textarea { resize: vertical; min-height: 72px; }
   min-height: 1.1em;
   margin-bottom: 2px;
 }
+
+.date-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.date-group select { flex: 1; min-width: 80px; margin-bottom: 0; }
+.date-group .field-error { flex-basis: 100%; margin-top: 2px; }
 .input-invalid {
   border-color: var(--bad) !important;
   box-shadow: 0 0 0 3px rgba(239,68,68,.12) !important;

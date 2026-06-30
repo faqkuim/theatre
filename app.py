@@ -214,13 +214,16 @@ def dashboard(user):
            ORDER BY r.created_at DESC''',
         (user['id'],),
     ).fetchall()
+    today = date.today()
+    years = [today.year + i for i in range(2)]
     return render_template('dashboard.html',
                            user=user,
                            masters=masters,
                            services=services,
                            appointments=my_appointments,
                            reviews=my_reviews,
-                           today=date.today().isoformat())
+                           today=today.isoformat(),
+                           years=years)
 
 
 @app.route('/book', methods=['POST'])
@@ -228,7 +231,10 @@ def dashboard(user):
 def book(user):
     master_id  = request.form.get('master_id')
     service_id = request.form.get('service_id')
-    appt_date  = request.form.get('appt_date', '').strip()
+    appt_day   = request.form.get('appt_day', '').strip()
+    appt_month = request.form.get('appt_month', '').strip()
+    appt_year  = request.form.get('appt_year', '').strip()
+    appt_date  = f"{appt_year}-{appt_month}-{appt_day}" if (appt_day and appt_month and appt_year) else ''
     appt_time  = request.form.get('appt_time', '').strip()
     comment    = request.form.get('comment', '').strip()
     if not (master_id and service_id and appt_date and appt_time):
