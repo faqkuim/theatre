@@ -42,7 +42,15 @@
       <span class="field-error"></span>
 
       <label for="appt_time">Время</label>
-      <input type="time" id="appt_time" name="appt_time" required>
+      <select id="appt_time" name="appt_time" required>
+        <option value="" disabled selected>Выберите время</option>
+        {% for h in range(9, 20) %}
+          {% for m in [0, 30] %}
+            {% set slot = '%02d:%02d'|format(h, m) %}
+            <option value="{{ slot }}">{{ slot }}</option>
+          {% endfor %}
+        {% endfor %}
+      </select>
       <span class="field-error"></span>
 
       <label for="comment">Комментарий</label>
