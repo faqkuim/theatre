@@ -4,23 +4,48 @@
 {# ── Slider ─────────────────────────────────────── #}
 <div class="grid" style="margin-bottom:8px">
   <div class="col-12">
-    <div class="slider" aria-label="Фото салона">
+    <div class="slider" aria-label="Услуги салона">
+
       <div class="slide active">
-        <img src="{{ url_for('static', filename='img/slider1.jpg') }}" alt="Салон 1" loading="eager">
-        <div class="slide-overlay"></div>
+        <div class="slide-bg slide-bg--hair">
+          <div class="slide-content">
+            <div class="slide-icon">&#9986;</div>
+            <div class="slide-title">Стрижки и окрашивание</div>
+            <div class="slide-sub">Современные техники от опытных стилистов</div>
+          </div>
+        </div>
       </div>
+
       <div class="slide">
-        <img src="{{ url_for('static', filename='img/slider2.jpg') }}" alt="Салон 2" loading="lazy">
-        <div class="slide-overlay"></div>
+        <div class="slide-bg slide-bg--nails">
+          <div class="slide-content">
+            <div class="slide-icon">&#10024;</div>
+            <div class="slide-title">Маникюр и педикюр</div>
+            <div class="slide-sub">Классика, гель-лак и художественный дизайн</div>
+          </div>
+        </div>
       </div>
+
       <div class="slide">
-        <img src="{{ url_for('static', filename='img/slider3.jpg') }}" alt="Салон 3" loading="lazy">
-        <div class="slide-overlay"></div>
+        <div class="slide-bg slide-bg--skin">
+          <div class="slide-content">
+            <div class="slide-icon">&#9786;</div>
+            <div class="slide-title">Уход за кожей лица</div>
+            <div class="slide-sub">Чистки, маски и омолаживающие процедуры</div>
+          </div>
+        </div>
       </div>
+
       <div class="slide">
-        <img src="{{ url_for('static', filename='img/slider4.jpg') }}" alt="Салон 4" loading="lazy">
-        <div class="slide-overlay"></div>
+        <div class="slide-bg slide-bg--brows">
+          <div class="slide-content">
+            <div class="slide-icon">&#9670;</div>
+            <div class="slide-title">Брови и ламинирование</div>
+            <div class="slide-sub">Коррекция, окрашивание хной и ламинирование</div>
+          </div>
+        </div>
       </div>
+
       <div class="controls">
         <button class="btn secondary" onclick="prevSlide()" aria-label="Предыдущий">&#8592;</button>
         <button class="btn secondary" onclick="nextSlide()" aria-label="Следующий">&#8594;</button>

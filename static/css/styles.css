@@ -282,15 +282,41 @@ textarea { resize: vertical; min-height: 72px; }
   transition: opacity .9s ease;
 }
 .slide.active { opacity: 1; }
-.slide img {
+
+.slide-bg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.slide-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(16,13,15,.7) 0%, transparent 50%);
+.slide-bg--hair  { background: linear-gradient(135deg, #3b0a2a 0%, #6b1a4a 45%, #1a0a1e 100%); }
+.slide-bg--nails { background: linear-gradient(135deg, #1a0a2e 0%, #7c2d6b 45%, #2a0a1a 100%); }
+.slide-bg--skin  { background: linear-gradient(135deg, #2a0a1e 0%, #b8406e 45%, #1a0a0e 100%); }
+.slide-bg--brows { background: linear-gradient(135deg, #1a1a0a 0%, #7a5c0a 45%, #2a1a0a 100%); }
+
+.slide-content {
+  text-align: center;
+  padding: 24px;
+  color: #f4e6f0;
+}
+.slide-icon {
+  font-size: 3.2rem;
+  line-height: 1;
+  margin-bottom: 14px;
+  opacity: .9;
+}
+.slide-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+.slide-sub {
+  font-size: 1rem;
+  opacity: .7;
+  text-shadow: 0 1px 6px rgba(0,0,0,.4);
 }
 .slider .controls {
   position: absolute;
