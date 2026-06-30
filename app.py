@@ -193,6 +193,19 @@ def dashboard(user):
     services = db.execute(
         'SELECT * FROM services WHERE is_active=1 ORDER BY category, name'
     ).fetchall()
+    sm_rows = db.execute(
+        '''SELECT ms.service_id, m.id, m.full_name, m.specialization
+           FROM master_services ms
+           JOIN masters m ON m.id = ms.master_id
+           WHERE m.is_active = 1
+           ORDER BY ms.service_id, m.full_name'''
+    ).fetchall()
+    service_masters = {}
+    for row in sm_rows:
+        sid = str(row['service_id'])
+        service_masters.setdefault(sid, []).append(
+            {'id': row['id'], 'name': row['full_name'], 'spec': row['specialization']}
+        )
     my_appointments = db.execute(
         '''SELECT a.id, a.appt_date, a.appt_time, a.status, a.comment,
                   m.full_name AS master_name,
@@ -220,6 +233,7 @@ def dashboard(user):
                            user=user,
                            masters=masters,
                            services=services,
+                           service_masters=service_masters,
                            appointments=my_appointments,
                            reviews=my_reviews,
                            today=today.isoformat(),

@@ -18,22 +18,20 @@
 <div class="grid">
   <div class="col-12 col-6 card">
     <h3 style="margin-top:0">Новая запись</h3>
+    <script>const SERVICE_MASTERS = {{ service_masters | tojson }};</script>
     <form method="post" action="{{ url_for('book') }}" novalidate data-validate>
-      <label for="master_id">Мастер</label>
-      <select id="master_id" name="master_id" required>
-        <option value="" disabled selected>Выберите мастера</option>
-        {% for m in masters %}
-        <option value="{{ m.id }}">{{ m.full_name }} &mdash; {{ m.specialization }}</option>
-        {% endfor %}
-      </select>
-      <span class="field-error"></span>
-
       <label for="service_id">Услуга</label>
       <select id="service_id" name="service_id" required>
         <option value="" disabled selected>Выберите услугу</option>
         {% for s in services %}
         <option value="{{ s.id }}">{{ s.name }} &mdash; {{ s.price | int }}&thinsp;&#8381; ({{ s.duration }}&thinsp;мин)</option>
         {% endfor %}
+      </select>
+      <span class="field-error"></span>
+
+      <label for="master_id">Мастер</label>
+      <select id="master_id" name="master_id" required disabled>
+        <option value="" disabled selected>Сначала выберите услугу</option>
       </select>
       <span class="field-error"></span>
 

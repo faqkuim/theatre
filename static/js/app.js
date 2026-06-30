@@ -53,7 +53,7 @@ function validateForm(form) {
   let ok = true;
   const handledRadios = new Set();
 
-  form.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+  form.querySelectorAll('input[required]:not(:disabled), select[required]:not(:disabled), textarea[required]:not(:disabled)').forEach(input => {
     // Radio group — check once per name
     if (input.type === 'radio') {
       if (handledRadios.has(input.name)) return;
@@ -113,6 +113,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-toast]:not([type="submit"])').forEach(el => {
     el.addEventListener('click', () => toast(el.dataset.toast || 'Готово'));
   });
+
+  // Service → master cascade (booking form)
+  const serviceSelect = document.getElementById('service_id');
+  const masterSelect  = document.getElementById('master_id');
+  if (serviceSelect && masterSelect && typeof SERVICE_MASTERS !== 'undefined') {
+    serviceSelect.addEventListener('change', () => {
+      const sid = serviceSelect.value;
+      const list = SERVICE_MASTERS[sid] || [];
+      masterSelect.innerHTML = '<option value="" disabled selected>Выберите мастера</option>';
+      list.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name + ' — ' + m.spec;
+        masterSelect.appendChild(opt);
+      });
+      masterSelect.disabled = list.length === 0;
+      fieldClear(masterSelect);
+    });
+  }
 
   // Inline form validation
   document.querySelectorAll('form[data-validate]').forEach(form => {

@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS services (
     is_active   INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE IF NOT EXISTS master_services (
+    master_id  INTEGER NOT NULL REFERENCES masters(id)  ON DELETE CASCADE,
+    service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    PRIMARY KEY (master_id, service_id)
+);
+
 CREATE TABLE IF NOT EXISTS appointments (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
