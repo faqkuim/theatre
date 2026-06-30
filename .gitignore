@@ -1,0 +1,18 @@
+# Generated files
+diagram.pdf
+theatre_er.png
+theatre.db
+
+# Database files
+instance/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Database
+instance/
+*.db
+*.sqlite
