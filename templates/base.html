@@ -10,7 +10,9 @@
 </head>
 <body>
   <header class="header wrap">
-    <div class="brand">Студия красоты</div>
+    <a href="{{ url_for('index') }}" class="brand">
+      <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Студия красоты" class="brand-logo">
+    </a>
     <nav class="nav">
       <a href="{{ url_for('index') }}">Главная</a>
       {% if session.get('user_id') %}

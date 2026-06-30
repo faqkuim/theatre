@@ -49,11 +49,20 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus {
 }
 
 .brand {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: .04em;
-  color: var(--accent);
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
+
+.brand-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+  border-radius: 6px;
+  object-fit: contain;
+  transition: opacity .2s;
+}
+.brand:hover .brand-logo { opacity: .85; }
 
 .nav a {
   margin-left: 14px;
