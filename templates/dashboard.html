@@ -70,7 +70,7 @@
           {% for a in appointments %}
           <tr>
             <td style="white-space:nowrap">{{ a.appt_date }}</td>
-            <td>{{ a.appt_time }}</td>
+            <td>{{ a.appt_time[:5] }}</td>
             <td>{{ a.service_name }}</td>
             <td>{{ a.master_name }}</td>
             <td style="white-space:nowrap">{{ a.price | int }}&thinsp;&#8381;</td>

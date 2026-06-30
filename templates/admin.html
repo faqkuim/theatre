@@ -53,7 +53,7 @@
           <td>{{ r.master_name }}</td>
           <td>{{ r.service_name }}</td>
           <td style="white-space:nowrap">{{ r.appt_date }}</td>
-          <td>{{ r.appt_time }}</td>
+          <td>{{ r.appt_time[:5] }}</td>
           <td style="white-space:nowrap">{{ r.price | int }}&thinsp;&#8381;</td>
           <td>
             <span class="status {{ r.status }}">{{ status_label.get(r.status, r.status) }}</span>
