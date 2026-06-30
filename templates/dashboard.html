@@ -1,69 +1,171 @@
 {% extends "base.html" %}
+{% set title = "Личный кабинет — Студия красоты" %}
+{% set status_label = {'pending':'Ожидает','confirmed':'Подтверждена','completed':'Завершена','cancelled':'Отменена'} %}
 {% block content %}
-{% set status_label = {'new': 'Новая', 'confirmed': 'Подтверждена', 'cancelled': 'Отменена'} %}
-<div class="grid">
-  <div class="col-12 card">
-    <h2 style="margin-top:0">Личный кабинет</h2>
-    <p>Здравствуйте, <strong>{{ user.full_name }}</strong>!</p>
-  </div>
 
+<div class="grid">
+  <div class="col-12 card" style="display:flex;align-items:center;gap:14px">
+    <div class="master-avatar">{{ user.full_name[0] }}</div>
+    <div>
+      <div style="font-weight:700;font-size:1.05rem">{{ user.full_name }}</div>
+      <div style="font-size:.85rem;opacity:.6">{{ user.email }} &middot; {{ user.phone }}</div>
+    </div>
+  </div>
+</div>
+
+{# ── Booking form ─────────────────────────────────── #}
+<h2 class="section-title">Онлайн-запись</h2>
+<div class="grid">
   <div class="col-12 col-6 card">
-    <h3 style="margin-top:0">Создать заявку</h3>
-    <form method="post" action="{{ url_for('create_request') }}" novalidate data-validate>
-      <label for="performance_id">Спектакль</label>
-      <select id="performance_id" name="performance_id" required>
-        {% for p in performances %}
-        <option value="{{ p.id }}">{{ p.title }} — {{ p.starts_at[:10] }} ({{ p.hall }})</option>
+    <h3 style="margin-top:0">Новая запись</h3>
+    <form method="post" action="{{ url_for('book') }}" novalidate data-validate>
+      <label for="master_id">Мастер</label>
+      <select id="master_id" name="master_id" required>
+        <option value="" disabled selected>Выберите мастера</option>
+        {% for m in masters %}
+        <option value="{{ m.id }}">{{ m.full_name }} &mdash; {{ m.specialization }}</option>
         {% endfor %}
       </select>
       <span class="field-error"></span>
 
-      <label for="qty">Количество билетов</label>
-      <input type="number" id="qty" name="qty" min="1" max="10" required value="1">
-      <span class="field-error"></span>
-
-      <label for="payment_method">Способ оплаты</label>
-      <select id="payment_method" name="payment_method" required>
-        <option value="online">Онлайн</option>
-        <option value="card">Банковская карта</option>
-        <option value="cash">Наличные</option>
+      <label for="service_id">Услуга</label>
+      <select id="service_id" name="service_id" required>
+        <option value="" disabled selected>Выберите услугу</option>
+        {% for s in services %}
+        <option value="{{ s.id }}">{{ s.name }} &mdash; {{ s.price | int }}&thinsp;&#8381; ({{ s.duration }}&thinsp;мин)</option>
+        {% endfor %}
       </select>
       <span class="field-error"></span>
 
-      <button class="btn" type="submit" data-toast="Заявка отправлена!" style="margin-top:14px">
-        Отправить заявку
+      <label for="appt_date">Дата</label>
+      <input type="date" id="appt_date" name="appt_date" required min="{{ today }}">
+      <span class="field-error"></span>
+
+      <label for="appt_time">Время</label>
+      <input type="time" id="appt_time" name="appt_time" required>
+      <span class="field-error"></span>
+
+      <label for="comment">Комментарий</label>
+      <textarea id="comment" name="comment" placeholder="Пожелания, вопросы..."></textarea>
+
+      <button class="btn" type="submit" data-toast="Запись отправлена!" style="margin-top:14px">
+        Записаться
       </button>
     </form>
   </div>
 
+  {# ── My appointments ─────────────────────────────── #}
   <div class="col-12 col-6 card">
-    <h3 style="margin-top:0">Мои заявки</h3>
-    {% if requests %}
+    <h3 style="margin-top:0">Мои записи</h3>
+    {% if appointments %}
     <div style="overflow-x:auto">
       <table class="table">
         <thead>
           <tr>
-            <th>#</th><th>Спектакль</th><th>Дата</th>
-            <th>Кол.</th><th>Оплата</th><th>Статус</th>
+            <th>Дата</th><th>Время</th><th>Услуга</th>
+            <th>Мастер</th><th>Цена</th><th>Статус</th>
           </tr>
         </thead>
         <tbody>
-          {% for r in requests %}
+          {% for a in appointments %}
           <tr>
-            <td>{{ r.id }}</td>
-            <td>{{ r.title }}</td>
-            <td style="white-space:nowrap">{{ r.starts_at[:10] }}</td>
-            <td>{{ r.qty }}</td>
-            <td>{{ r.payment_method }}</td>
-            <td><span class="status {{ r.status }}">{{ status_label.get(r.status, r.status) }}</span></td>
+            <td style="white-space:nowrap">{{ a.appt_date }}</td>
+            <td>{{ a.appt_time }}</td>
+            <td>{{ a.service_name }}</td>
+            <td>{{ a.master_name }}</td>
+            <td style="white-space:nowrap">{{ a.price | int }}&thinsp;&#8381;</td>
+            <td>
+              <span class="status {{ a.status }}">
+                {{ status_label.get(a.status, a.status) }}
+              </span>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
     {% else %}
-    <p style="opacity:.6">Заявок пока нет.</p>
+    <p style="opacity:.55">Записей пока нет. Воспользуйтесь формой слева.</p>
     {% endif %}
   </div>
 </div>
+
+{# ── Review form ──────────────────────────────────── #}
+<h2 class="section-title">Оставить отзыв</h2>
+<div class="grid">
+  <div class="col-12 col-6 card">
+    <form method="post" action="{{ url_for('review') }}" novalidate data-validate>
+      <label for="rev_master">Мастер (необязательно)</label>
+      <select id="rev_master" name="master_id">
+        <option value="">Не указывать</option>
+        {% for m in masters %}
+        <option value="{{ m.id }}">{{ m.full_name }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="rev_service">Услуга (необязательно)</label>
+      <select id="rev_service" name="service_id">
+        <option value="">Не указывать</option>
+        {% for s in services %}
+        <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Оценка *</label>
+      <div class="star-select">
+        <input type="radio" name="rating" id="s5" value="5" required>
+        <label for="s5">&#9733;</label>
+        <input type="radio" name="rating" id="s4" value="4">
+        <label for="s4">&#9733;</label>
+        <input type="radio" name="rating" id="s3" value="3">
+        <label for="s3">&#9733;</label>
+        <input type="radio" name="rating" id="s2" value="2">
+        <label for="s2">&#9733;</label>
+        <input type="radio" name="rating" id="s1" value="1">
+        <label for="s1">&#9733;</label>
+      </div>
+      <span class="field-error"></span>
+
+      <label for="rev_body">Ваш отзыв *</label>
+      <textarea id="rev_body" name="body" required minlength="10"
+                placeholder="Расскажите о вашем впечатлении..."></textarea>
+      <span class="field-error"></span>
+
+      <button class="btn" type="submit" data-toast="Отзыв отправлен на проверку!" style="margin-top:14px">
+        Отправить отзыв
+      </button>
+    </form>
+  </div>
+
+  {# ── My reviews ──────────────────────────────────── #}
+  <div class="col-12 col-6 card">
+    <h3 style="margin-top:0">Мои отзывы</h3>
+    {% if reviews %}
+    {% for r in reviews %}
+    <div style="border-bottom:1px solid rgba(255,255,255,.06);padding:10px 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div class="star-disp" style="font-size:.9rem">
+          {% for _ in range(r.rating) %}&#9733;{% endfor %}<span class="empty">{% for _ in range(5 - r.rating) %}&#9733;{% endfor %}</span>
+        </div>
+        {% if r.is_approved %}
+          <span style="font-size:.75rem;color:#39e39f">&#10003; Опубликован</span>
+        {% else %}
+          <span style="font-size:.75rem;opacity:.5">На проверке</span>
+        {% endif %}
+      </div>
+      <p style="margin:0 0 4px;font-size:.88rem">{{ r.body }}</p>
+      {% if r.master_name or r.service_name %}
+      <p style="margin:0;font-size:.75rem;opacity:.5">
+        {% if r.master_name %}{{ r.master_name }}{% endif %}
+        {% if r.service_name %} &middot; {{ r.service_name }}{% endif %}
+      </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="opacity:.55">Отзывов пока нет.</p>
+    {% endif %}
+  </div>
+</div>
+
 {% endblock %}

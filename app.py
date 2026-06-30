@@ -1,16 +1,19 @@
 import os
 import sqlite3
+from datetime import date
 from functools import wraps
 
 from flask import Flask, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(__file__)
-DB_PATH = os.path.join(BASE_DIR, 'theatre.db')
+DB_PATH  = os.path.join(BASE_DIR, 'beauty.db')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
 
+
+# ── DB helpers ────────────────────────────────────────────
 
 def get_db():
     if 'db' not in g:
@@ -39,33 +42,26 @@ def ensure_user(email, login, password, full_name, phone, is_admin=0):
     if db.execute('SELECT id FROM users WHERE email=?', (email,)).fetchone():
         return
     db.execute(
-        '''INSERT INTO users(email,login,password_hash,full_name,phone,is_admin)
-           VALUES(?,?,?,?,?,?)''',
+        'INSERT INTO users(email,login,password_hash,full_name,phone,is_admin) VALUES(?,?,?,?,?,?)',
         (email, login, generate_password_hash(password), full_name, phone, is_admin),
     )
 
 
-def init_db():
-    run_script('schema.sql')
-
-
-def seed_db():
-    run_script('seed.sql')
-    ensure_user('user1@example.com', 'user1', 'password123', 'Иван Петров', '+7-999-111-22-33', 0)
-    ensure_user('admin@example.com', 'admin', 'admin12345', 'Администратор Театра', '+7-999-000-00-00', 1)
-    get_db().commit()
-
-
 def ensure_db():
     if not os.path.exists(DB_PATH):
-        init_db()
-        seed_db()
+        run_script('schema.sql')
+        run_script('seed.sql')
+        ensure_user('client@example.com', 'client1', 'password123',
+                    'Ирина Смирнова', '+7-999-111-22-33', 0)
+        ensure_user('admin@example.com', 'admin', 'admin12345',
+                    'Администратор', '+7-999-000-00-00', 1)
+        get_db().commit()
 
 
 def log_action(user_id, action):
     db = get_db()
     db.execute(
-        'INSERT INTO auth_log(user_id, action, ip, user_agent) VALUES(?,?,?,?)',
+        'INSERT INTO auth_log(user_id,action,ip,user_agent) VALUES(?,?,?,?)',
         (user_id, action, request.remote_addr, request.headers.get('User-Agent', '')),
     )
     db.commit()
@@ -75,8 +71,7 @@ def current_user():
     uid = session.get('user_id')
     if not uid:
         return None
-    db = get_db()
-    return db.execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
+    return get_db().execute('SELECT * FROM users WHERE id=?', (uid,)).fetchone()
 
 
 def login_required(view):
@@ -99,10 +94,30 @@ def admin_required(view):
     return wrapped
 
 
+# ── Public routes ─────────────────────────────────────────
+
 @app.route('/')
 def index():
     ensure_db()
-    return render_template('index.html', title='Главная')
+    db = get_db()
+    services = db.execute(
+        'SELECT * FROM services WHERE is_active=1 ORDER BY category, name'
+    ).fetchall()
+    masters = db.execute(
+        'SELECT * FROM masters WHERE is_active=1'
+    ).fetchall()
+    reviews = db.execute(
+        '''SELECT r.rating, r.body, r.created_at, u.full_name,
+                  m.full_name AS master_name, s.name AS service_name
+           FROM reviews r
+           JOIN users u ON u.id=r.user_id
+           LEFT JOIN masters m ON m.id=r.master_id
+           LEFT JOIN services s ON s.id=r.service_id
+           WHERE r.is_approved=1
+           ORDER BY r.created_at DESC LIMIT 6'''
+    ).fetchall()
+    return render_template('index.html', services=services,
+                           masters=masters, reviews=reviews)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -112,10 +127,10 @@ def register():
         return render_template('register.html')
 
     login_name = request.form.get('login', '').strip()
-    full_name = request.form.get('full_name', '').strip()
-    phone = request.form.get('phone', '').strip()
-    email = request.form.get('email', '').strip().lower()
-    password = request.form.get('password', '')
+    full_name  = request.form.get('full_name', '').strip()
+    phone      = request.form.get('phone', '').strip()
+    email      = request.form.get('email', '').strip().lower()
+    password   = request.form.get('password', '')
 
     if not (login_name and full_name and phone and email and password):
         return render_template('register.html', error='Заполните все поля')
@@ -123,16 +138,15 @@ def register():
         return render_template('register.html', error='Пароль должен быть не менее 8 символов')
 
     db = get_db()
-    if db.execute('SELECT 1 FROM users WHERE login=? OR email=?', (login_name, email)).fetchone():
+    if db.execute('SELECT 1 FROM users WHERE login=? OR email=?',
+                  (login_name, email)).fetchone():
         return render_template('register.html', error='Логин или email уже заняты')
 
     db.execute(
-        '''INSERT INTO users(email,login,password_hash,full_name,phone,is_admin)
-           VALUES(?,?,?,?,?,0)''',
+        'INSERT INTO users(email,login,password_hash,full_name,phone,is_admin) VALUES(?,?,?,?,?,0)',
         (email, login_name, generate_password_hash(password), full_name, phone),
     )
     db.commit()
-
     user_id = db.execute('SELECT id FROM users WHERE email=?', (email,)).fetchone()['id']
     log_action(user_id, 'register')
     session['user_id'] = user_id
@@ -146,10 +160,10 @@ def login():
     if request.method != 'POST':
         return render_template('login.html')
 
-    email = request.form.get('email', '').strip().lower()
+    email    = request.form.get('email', '').strip().lower()
     password = request.form.get('password', '')
-    db = get_db()
-    user = db.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
+    db       = get_db()
+    user     = db.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
     if not user or not check_password_hash(user['password_hash'], password):
         return render_template('login.html', error='Неверный email или пароль')
 
@@ -168,101 +182,178 @@ def logout():
     return redirect(url_for('index'))
 
 
+# ── Client cabinet ────────────────────────────────────────
+
 @app.route('/dashboard')
 @login_required
 def dashboard(user):
     ensure_db()
-    db = get_db()
-    performances = db.execute(
-        '''SELECT performances.id, productions.title, performances.starts_at, performances.hall
-           FROM performances
-           JOIN productions ON productions.id=performances.production_id
-           ORDER BY performances.starts_at ASC'''
+    db       = get_db()
+    masters  = db.execute('SELECT * FROM masters WHERE is_active=1').fetchall()
+    services = db.execute(
+        'SELECT * FROM services WHERE is_active=1 ORDER BY category, name'
     ).fetchall()
-    my_requests = db.execute(
-        '''SELECT r.id, p.title, pf.starts_at, r.qty, r.payment_method, r.status
-           FROM requests r
-           JOIN performances pf ON pf.id=r.performance_id
-           JOIN productions p ON p.id=pf.production_id
+    my_appointments = db.execute(
+        '''SELECT a.id, a.appt_date, a.appt_time, a.status, a.comment,
+                  m.full_name AS master_name,
+                  s.name AS service_name, s.price
+           FROM appointments a
+           JOIN masters m  ON m.id=a.master_id
+           JOIN services s ON s.id=a.service_id
+           WHERE a.user_id=?
+           ORDER BY a.appt_date DESC, a.appt_time DESC''',
+        (user['id'],),
+    ).fetchall()
+    my_reviews = db.execute(
+        '''SELECT r.id, r.rating, r.body, r.is_approved, r.created_at,
+                  m.full_name AS master_name, s.name AS service_name
+           FROM reviews r
+           LEFT JOIN masters m  ON m.id=r.master_id
+           LEFT JOIN services s ON s.id=r.service_id
            WHERE r.user_id=?
            ORDER BY r.created_at DESC''',
         (user['id'],),
     ).fetchall()
-    return render_template('dashboard.html', user=user, performances=performances, requests=my_requests)
+    return render_template('dashboard.html',
+                           user=user,
+                           masters=masters,
+                           services=services,
+                           appointments=my_appointments,
+                           reviews=my_reviews,
+                           today=date.today().isoformat())
 
 
-@app.route('/create-request', methods=['POST'])
+@app.route('/book', methods=['POST'])
 @login_required
-def create_request(user):
-    performance_id = request.form.get('performance_id')
-    qty = request.form.get('qty', type=int)
-    payment_method = request.form.get('payment_method', '')
-    if not (performance_id and qty and payment_method):
+def book(user):
+    master_id  = request.form.get('master_id')
+    service_id = request.form.get('service_id')
+    appt_date  = request.form.get('appt_date', '').strip()
+    appt_time  = request.form.get('appt_time', '').strip()
+    comment    = request.form.get('comment', '').strip()
+    if not (master_id and service_id and appt_date and appt_time):
         return redirect(url_for('dashboard'))
     db = get_db()
     db.execute(
-        '''INSERT INTO requests(user_id, performance_id, qty, payment_method, status)
-           VALUES(?,?,?,?, 'new')''',
-        (user['id'], performance_id, qty, payment_method),
+        '''INSERT INTO appointments(user_id,master_id,service_id,appt_date,appt_time,comment)
+           VALUES(?,?,?,?,?,?)''',
+        (user['id'], master_id, service_id, appt_date, appt_time, comment or None),
     )
     db.commit()
     return redirect(url_for('dashboard'))
 
 
+@app.route('/review', methods=['POST'])
+@login_required
+def review(user):
+    master_id  = request.form.get('master_id') or None
+    service_id = request.form.get('service_id') or None
+    rating     = request.form.get('rating', type=int)
+    body       = request.form.get('body', '').strip()
+    if not (rating and body and 1 <= rating <= 5):
+        return redirect(url_for('dashboard'))
+    db = get_db()
+    db.execute(
+        'INSERT INTO reviews(user_id,master_id,service_id,rating,body) VALUES(?,?,?,?,?)',
+        (user['id'], master_id, service_id, rating, body),
+    )
+    db.commit()
+    return redirect(url_for('dashboard'))
+
+
+# ── Admin panel ───────────────────────────────────────────
+
 @app.route('/admin')
 @admin_required
 def admin(user):
-    db = get_db()
+    db            = get_db()
     status_filter = request.args.get('status') or ''
-    params = []
-    where = ''
+    master_filter = request.args.get('master_id', type=int) or 0
+    where_parts, params = [], []
+
     if status_filter:
-        where = 'WHERE r.status=?'
+        where_parts.append('a.status=?')
         params.append(status_filter)
+    if master_filter:
+        where_parts.append('a.master_id=?')
+        params.append(master_filter)
+
+    where = ('WHERE ' + ' AND '.join(where_parts)) if where_parts else ''
 
     per_page = 10
-    page = max(1, request.args.get('page', 1, type=int))
-
-    total = db.execute(
-        f'SELECT COUNT(*) FROM requests r {where}', params
+    page     = max(1, request.args.get('page', 1, type=int))
+    total    = db.execute(
+        f'SELECT COUNT(*) FROM appointments a {where}', params
     ).fetchone()[0]
     total_pages = max(1, (total + per_page - 1) // per_page)
-    page = min(page, total_pages)
+    page        = min(page, total_pages)
 
     rows = db.execute(
-        f'''SELECT r.id, r.qty, r.payment_method, r.status,
-                  u.full_name, u.email,
-                  p.title, pf.starts_at
-           FROM requests r
-           JOIN users u ON u.id=r.user_id
-           JOIN performances pf ON pf.id=r.performance_id
-           JOIN productions p ON p.id=pf.production_id
-           {where}
-           ORDER BY r.created_at DESC
-           LIMIT ? OFFSET ?''',
+        f'''SELECT a.id, a.appt_date, a.appt_time, a.status, a.comment,
+                   u.full_name AS client_name, u.phone, u.email,
+                   m.full_name AS master_name, s.name AS service_name, s.price
+            FROM appointments a
+            JOIN users u    ON u.id=a.user_id
+            JOIN masters m  ON m.id=a.master_id
+            JOIN services s ON s.id=a.service_id
+            {where}
+            ORDER BY a.appt_date DESC, a.appt_time DESC
+            LIMIT ? OFFSET ?''',
         params + [per_page, (page - 1) * per_page],
     ).fetchall()
-    return render_template(
-        'admin.html',
-        rows=rows,
-        page=page,
-        total_pages=total_pages,
-        total=total,
-        status_filter=status_filter,
-    )
+
+    masters = db.execute('SELECT * FROM masters WHERE is_active=1').fetchall()
+
+    pending_reviews = db.execute(
+        '''SELECT r.id, r.rating, r.body, r.created_at,
+                  u.full_name, m.full_name AS master_name, s.name AS service_name
+           FROM reviews r
+           JOIN users u ON u.id=r.user_id
+           LEFT JOIN masters m  ON m.id=r.master_id
+           LEFT JOIN services s ON s.id=r.service_id
+           WHERE r.is_approved=0
+           ORDER BY r.created_at ASC LIMIT 20'''
+    ).fetchall()
+
+    return render_template('admin.html',
+                           rows=rows,
+                           masters=masters,
+                           pending_reviews=pending_reviews,
+                           page=page,
+                           total_pages=total_pages,
+                           total=total,
+                           status_filter=status_filter,
+                           master_filter=master_filter)
 
 
-@app.route('/admin/set-status/<int:req_id>', methods=['POST'])
+@app.route('/admin/set-status/<int:appt_id>', methods=['POST'])
 @admin_required
-def set_status(user, req_id):
+def set_status(user, appt_id):
     new_status = request.form.get('status')
-    if new_status not in ('new', 'confirmed', 'cancelled'):
+    if new_status not in ('pending', 'confirmed', 'completed', 'cancelled'):
         return redirect(url_for('admin'))
     db = get_db()
-    db.execute('UPDATE requests SET status=? WHERE id=?', (new_status, req_id))
+    db.execute('UPDATE appointments SET status=? WHERE id=?', (new_status, appt_id))
     db.commit()
-    ref = request.form.get('from') or url_for('admin')
-    return redirect(ref)
+    return redirect(request.form.get('from') or url_for('admin'))
+
+
+@app.route('/admin/review/<int:rev_id>/approve', methods=['POST'])
+@admin_required
+def approve_review(user, rev_id):
+    db = get_db()
+    db.execute('UPDATE reviews SET is_approved=1 WHERE id=?', (rev_id,))
+    db.commit()
+    return redirect(url_for('admin'))
+
+
+@app.route('/admin/review/<int:rev_id>/delete', methods=['POST'])
+@admin_required
+def delete_review(user, rev_id):
+    db = get_db()
+    db.execute('DELETE FROM reviews WHERE id=?', (rev_id,))
+    db.commit()
+    return redirect(url_for('admin'))
 
 
 if __name__ == '__main__':

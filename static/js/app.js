@@ -30,23 +30,51 @@ function toast(msg) {
 }
 
 // ── Inline form validation ───────────────────────────────
+function getErrorSpan(input) {
+  // Check direct parent for .field-error
+  let err = input.parentElement.querySelector('.field-error');
+  if (!err) err = input.parentElement.parentElement?.querySelector('.field-error');
+  return err;
+}
+
 function fieldError(input, msg) {
   input.classList.add('input-invalid');
-  const span = input.parentElement.querySelector('.field-error');
+  const span = getErrorSpan(input);
   if (span) span.textContent = msg;
 }
 
 function fieldClear(input) {
   input.classList.remove('input-invalid');
-  const span = input.parentElement.querySelector('.field-error');
+  const span = getErrorSpan(input);
   if (span) span.textContent = '';
 }
 
 function validateForm(form) {
   let ok = true;
-  form.querySelectorAll('input[required], select[required]').forEach(input => {
+  const handledRadios = new Set();
+
+  form.querySelectorAll('input[required], select[required], textarea[required]').forEach(input => {
+    // Radio group — check once per name
+    if (input.type === 'radio') {
+      if (handledRadios.has(input.name)) return;
+      handledRadios.add(input.name);
+      const checked = Array.from(form.querySelectorAll(`input[name="${input.name}"]`))
+                        .some(r => r.checked);
+      if (!checked) {
+        // Find .field-error next to .star-select
+        const wrap = input.closest('.star-select');
+        if (wrap) {
+          const err = wrap.nextElementSibling;
+          if (err?.classList.contains('field-error')) err.textContent = 'Выберите оценку';
+        }
+        ok = false;
+      }
+      return;
+    }
+
     fieldClear(input);
     const val = input.value.trim();
+
     if (!val) {
       fieldError(input, 'Обязательное поле');
       ok = false;
@@ -69,25 +97,24 @@ function validateForm(form) {
 
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Slider init + pause on hover
+  // Slider
   const sliderEl = document.querySelector('.slider');
   if (sliderEl) {
     startSlider();
     sliderEl.addEventListener('mouseenter', () => {
-      clearInterval(sliderTimer);
-      sliderTimer = null;
+      clearInterval(sliderTimer); sliderTimer = null;
     });
     sliderEl.addEventListener('mouseleave', () => {
       if (!sliderTimer) sliderTimer = setInterval(nextSlide, 3000);
     });
   }
 
-  // Toast on data-toast elements (skip form submit buttons — they cause page reload)
+  // Toast on data-toast (non-submit) elements
   document.querySelectorAll('[data-toast]:not([type="submit"])').forEach(el => {
     el.addEventListener('click', () => toast(el.dataset.toast || 'Готово'));
   });
 
-  // Custom inline form validation
+  // Inline form validation
   document.querySelectorAll('form[data-validate]').forEach(form => {
     form.addEventListener('submit', e => {
       if (!validateForm(form)) {
@@ -95,13 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const first = form.querySelector('.input-invalid');
         if (first) first.focus();
       } else {
-        const btn = form.querySelector('[type="submit"]');
-        if (btn && btn.dataset.toast) toast(btn.dataset.toast);
+        const btn = form.querySelector('[type="submit"][data-toast]');
+        if (btn) toast(btn.dataset.toast);
       }
     });
-    // Clear error on input
-    form.querySelectorAll('input, select').forEach(input => {
-      input.addEventListener('input', () => fieldClear(input));
+    form.querySelectorAll('input, select, textarea').forEach(input => {
+      input.addEventListener('input', () => {
+        if (input.type !== 'radio') fieldClear(input);
+      });
     });
   });
 });

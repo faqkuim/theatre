@@ -1,238 +1,122 @@
 -- ════════════════════════════════════════════════════════════
---  Theatre database — sample data
+--  Salon Beauty — sample data (MySQL)
 -- ════════════════════════════════════════════════════════════
 
-USE theatre;
+USE beauty;
 
--- Очистка перед вставкой (порядок важен из-за FK)
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE email_queue;
-TRUNCATE TABLE backup_log;
 TRUNCATE TABLE auth_log;
-TRUNCATE TABLE integration;
-TRUNCATE TABLE admin_setting;
-TRUNCATE TABLE ticket;
-TRUNCATE TABLE payments;
-TRUNCATE TABLE orders;
-TRUNCATE TABLE seat;
-TRUNCATE TABLE performance;
-TRUNCATE TABLE seat_zone;
-TRUNCATE TABLE role_permissions;
+TRUNCATE TABLE notifications;
+TRUNCATE TABLE loyalty_points;
+TRUNCATE TABLE reviews;
+TRUNCATE TABLE appointments;
+TRUNCATE TABLE working_hours;
+TRUNCATE TABLE master_services;
+TRUNCATE TABLE services;
+TRUNCATE TABLE masters;
+TRUNCATE TABLE categories;
 TRUNCATE TABLE users;
-TRUNCATE TABLE hall;
-TRUNCATE TABLE production;
-TRUNCATE TABLE payment_method;
-TRUNCATE TABLE permissions;
 TRUNCATE TABLE roles;
+TRUNCATE TABLE salon_settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ────────────────────────────────────────────────────────────
---  ROLES & PERMISSIONS
--- ────────────────────────────────────────────────────────────
-
+-- ── Roles ─────────────────────────────────────────────────
 INSERT INTO roles (code, name) VALUES
     ('admin',    'Администратор'),
     ('manager',  'Менеджер'),
-    ('cashier',  'Кассир'),
-    ('customer', 'Покупатель');
+    ('master',   'Мастер'),
+    ('client',   'Клиент');
 
-INSERT INTO permissions (code, name) VALUES
-    ('users.view',        'Просмотр пользователей'),
-    ('users.edit',        'Редактирование пользователей'),
-    ('productions.view',  'Просмотр постановок'),
-    ('productions.edit',  'Редактирование постановок'),
-    ('performances.view', 'Просмотр спектаклей'),
-    ('performances.edit', 'Редактирование спектаклей'),
-    ('orders.view',       'Просмотр заказов'),
-    ('orders.edit',       'Редактирование заказов'),
-    ('reports.view',      'Просмотр отчётов'),
-    ('settings.edit',     'Редактирование настроек');
+-- ── Salon settings ────────────────────────────────────────
+INSERT INTO salon_settings (skey, svalue) VALUES
+    ('salon_name',    '"Студия красоты"'),
+    ('working_from',  '"09:00"'),
+    ('working_to',    '"20:00"'),
+    ('slot_minutes',  '30'),
+    ('phone',         '"+7 (999) 000-00-00"'),
+    ('address',       '"ул. Цветочная, д. 5"');
 
--- admin gets all permissions
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.code = 'admin';
+-- ── Categories ────────────────────────────────────────────
+INSERT INTO categories (name, sort) VALUES
+    ('Волосы', 1),
+    ('Ногти',  2),
+    ('Лицо',   3),
+    ('Брови',  4);
 
--- manager
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r JOIN permissions p
-    ON p.code IN ('productions.view','productions.edit','performances.view','performances.edit','orders.view','reports.view')
-WHERE r.code = 'manager';
+-- ── Masters ───────────────────────────────────────────────
+INSERT INTO masters (full_name, specialization, bio, experience_yrs) VALUES
+    ('Анна Соколова',   'Парикмахер-стилист', 'Специалист по стрижкам и окрашиванию',       8),
+    ('Мария Петрова',   'Мастер маникюра',    'Классический и гелевый маникюр, педикюр',     5),
+    ('Елена Кузнецова', 'Косметолог',         'Аппаратная и ручная чистка, омолаживающие процедуры', 10),
+    ('Ольга Новикова',  'Бровист',            'Коррекция, окрашивание, ламинирование бровей', 4);
 
--- cashier
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r JOIN permissions p
-    ON p.code IN ('performances.view','orders.view','orders.edit')
-WHERE r.code = 'cashier';
+-- ── Services ──────────────────────────────────────────────
+INSERT INTO services (category_id, name, description, price, duration) VALUES
+    (1, 'Женская стрижка',      'Модельная стрижка с укладкой феном',           1200, 60),
+    (1, 'Мужская стрижка',      'Классическая или модельная стрижка',            700, 45),
+    (1, 'Окрашивание волос',    'Однотонное окрашивание с уходом',              2500, 120),
+    (2, 'Маникюр классический', 'Обработка ногтевой пластины + покрытие лаком',  900, 60),
+    (2, 'Маникюр гелевый',      'Стойкое гелевое покрытие до 3 недель',         1300, 75),
+    (2, 'Педикюр',              'Уход за стопами + покрытие лаком',             1100, 75),
+    (3, 'Чистка лица',          'Аппаратная или ручная чистка кожи',            1800, 90),
+    (3, 'Увлажняющая маска',    'Интенсивное увлажнение и питание кожи',          900, 45),
+    (4, 'Коррекция бровей',     'Придание формы воском или пинцетом',             500, 30),
+    (4, 'Ламинирование бровей', 'Ламинирование + окрашивание хной',             1200, 60);
 
--- ────────────────────────────────────────────────────────────
---  PAYMENT METHODS
--- ────────────────────────────────────────────────────────────
+-- ── Master-service mapping ────────────────────────────────
+-- master 1 (Анна): услуги волосы
+INSERT INTO master_services VALUES (1,1),(1,2),(1,3);
+-- master 2 (Мария): ногти
+INSERT INTO master_services VALUES (2,4),(2,5),(2,6);
+-- master 3 (Елена): лицо
+INSERT INTO master_services VALUES (3,7),(3,8);
+-- master 4 (Ольга): брови
+INSERT INTO master_services VALUES (4,9),(4,10);
 
-INSERT INTO payment_method (code, name) VALUES
-    ('cash',   'Наличные'),
-    ('card',   'Банковская карта'),
-    ('online', 'Онлайн-оплата'),
-    ('sbp',    'СБП');
+-- ── Working hours (Mon-Sat, 9-20) ────────────────────────
+INSERT INTO working_hours (master_id, day_of_week, start_time, end_time)
+SELECT m.id, d.n, '09:00:00', '20:00:00'
+FROM masters m,
+     (SELECT 1 n UNION SELECT 2 UNION SELECT 3
+      UNION SELECT 4 UNION SELECT 5 UNION SELECT 6) d
+WHERE m.is_active = 1;
 
--- ────────────────────────────────────────────────────────────
---  ADMIN SETTINGS
--- ────────────────────────────────────────────────────────────
+-- ── Users ─────────────────────────────────────────────────
+INSERT INTO users (login, email, password_hash, full_name, phone, role_id) VALUES
+    ('admin',    'admin@salon.ru',   '$2b$12$exADMINhash111111111111111111111111111111111111111111', 'Администратор',     '+79000000000', 1),
+    ('manager1', 'manager@salon.ru', '$2b$12$exMGRhash1111111111111111111111111111111111111111111', 'Менеджер Салона',   '+79001000000', 2),
+    ('anna_s',   'anna@salon.ru',    '$2b$12$exMSTRhash111111111111111111111111111111111111111111', 'Анна Соколова',     '+79001111111', 3),
+    ('ivanova_p','ivanova@mail.ru',  '$2b$12$exUSRhash1111111111111111111111111111111111111111111', 'Иванова Полина',    '+79002222222', 4),
+    ('smirnov_d','smirnov@mail.ru',  '$2b$12$exUSRhash2222222222222222222222222222222222222222222', 'Смирнов Дмитрий',   '+79003333333', 4);
 
-INSERT INTO admin_setting (skey, svalue) VALUES
-    ('site_name',          '"Городской театр"'),
-    ('ticket_reserve_min', '30'),
-    ('max_tickets_order',  '10'),
-    ('email_sender',       '"noreply@theatre.ru"');
+-- ── Demo appointments ─────────────────────────────────────
+INSERT INTO appointments (user_id, master_id, service_id, appt_date, appt_time, status) VALUES
+    (4, 1, 1, '2026-07-10', '10:00:00', 'confirmed'),
+    (4, 2, 5, '2026-07-12', '12:00:00', 'pending'),
+    (5, 3, 7, '2026-07-11', '14:00:00', 'confirmed'),
+    (5, 4, 10,'2026-07-15', '11:00:00', 'pending');
 
--- ────────────────────────────────────────────────────────────
---  HALLS
--- ────────────────────────────────────────────────────────────
+-- ── Demo reviews ──────────────────────────────────────────
+INSERT INTO reviews (user_id, master_id, service_id, rating, body, is_approved) VALUES
+    (4, 1, 1, 5, 'Анна — просто волшебница! Стрижка именно такая, как хотела. Обязательно вернусь!', 1),
+    (4, 2, 5, 5, 'Гелевый маникюр держится уже три недели. Мария — профессионал высшего класса.',    1),
+    (5, 3, 7, 4, 'Чистка лица прошла комфортно, кожа сияет. Елена всё объяснила и дала рекомендации.', 1),
+    (5, 4, 10,5, 'Ламинирование бровей — лучшее, что я делала! Теперь не нужна косметика.',          1);
 
-INSERT INTO hall (name) VALUES
-    ('Большой зал'),
-    ('Малый зал'),
-    ('Камерная сцена');
+-- ── Auth log ──────────────────────────────────────────────
+INSERT INTO auth_log (user_id, action, ip) VALUES
+    (1, 'login',    '127.0.0.1'),
+    (4, 'register', '192.168.1.55'),
+    (4, 'login',    '192.168.1.55'),
+    (5, 'register', '192.168.1.72');
 
--- seat_zone: (hall_id, name, price_mult)
-INSERT INTO seat_zone (hall_id, name, price_mult) VALUES
-    (1, 'Партер',       1.50),
-    (1, 'Амфитеатр',    1.20),
-    (1, 'Балкон',       1.00),
-    (2, 'Партер',       1.30),
-    (2, 'Балкон',       1.00),
-    (3, 'Единый зал',   1.00);
+-- ── Loyalty points ────────────────────────────────────────
+INSERT INTO loyalty_points (user_id, points, reason) VALUES
+    (4, 120, 'Бонус за первый визит'),
+    (4,  90, 'Маникюр 2026-07-12'),
+    (5, 180, 'Чистка лица 2026-07-11');
 
--- seats for Большой зал — партер rows 1-5 seats 1-10
-INSERT INTO seat (hall_id, zone_id, row_number, seat_number)
-SELECT 1, 1, r, s
-FROM
-    (SELECT 1 r UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) rows,
-    (SELECT 1 s UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-     UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) seats;
-
--- seats for Большой зал — амфитеатр rows 6-10 seats 1-12
-INSERT INTO seat (hall_id, zone_id, row_number, seat_number)
-SELECT 1, 2, r, s
-FROM
-    (SELECT 6 r UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) rows,
-    (SELECT 1 s UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
-     UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12) seats;
-
--- seats for Малый зал — партер rows 1-4 seats 1-8
-INSERT INTO seat (hall_id, zone_id, row_number, seat_number)
-SELECT 2, 4, r, s
-FROM
-    (SELECT 1 r UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) rows,
-    (SELECT 1 s UNION SELECT 2 UNION SELECT 3 UNION SELECT 4
-     UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8) seats;
-
--- ────────────────────────────────────────────────────────────
---  PRODUCTIONS
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO production (title, genre, description, duration_min, age_rating) VALUES
-    ('Жизель',               'Балет',   'Романтический балет А. Адана в двух действиях.',  120, '6+'),
-    ('Дон Кихот',            'Балет',   'Балет Л. Минкуса по роману Сервантеса.',          130, '6+'),
-    ('Спящая красавица',     'Балет',   'Балет П.И. Чайковского в трёх действиях.',        160, '0+'),
-    ('Ревизор',              'Комедия', 'Комедия Н.В. Гоголя в пяти действиях.',           140, '12+'),
-    ('Три сестры',           'Драма',   'Пьеса А.П. Чехова в четырёх действиях.',          170, '16+'),
-    ('Риголетто',            'Опера',   'Опера Джузеппе Верди в трёх действиях.',          155, '12+');
-
--- ────────────────────────────────────────────────────────────
---  PERFORMANCES
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO performance (production_id, hall_id, starts_at, base_price, status) VALUES
-    (1, 1, '2026-07-10 19:00:00', 1400.00, 'scheduled'),
-    (2, 1, '2026-07-15 19:00:00', 1500.00, 'scheduled'),
-    (3, 1, '2026-07-22 19:00:00', 1600.00, 'scheduled'),
-    (4, 2, '2026-07-18 18:30:00',  900.00, 'scheduled'),
-    (5, 3, '2026-07-25 19:00:00',  800.00, 'scheduled'),
-    (6, 1, '2026-08-05 19:00:00', 2000.00, 'scheduled');
-
--- ────────────────────────────────────────────────────────────
---  USERS
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO users (login, password_hash, full_name, phone, email, role_id, is_active) VALUES
-    ('admin',
-     '$2b$12$examplehashADMIN111111111111111111111111111111111111111',
-     'Иванов Иван Иванович',     '+79001112233', 'admin@theatre.ru',    1, 1),
-    ('manager1',
-     '$2b$12$examplehashMGR1111111111111111111111111111111111111111',
-     'Петрова Мария Сергеевна',  '+79002223344', 'manager@theatre.ru',  2, 1),
-    ('cashier1',
-     '$2b$12$examplehashCSH1111111111111111111111111111111111111111',
-     'Сидоров Алексей Петрович', '+79003334455', 'cashier@theatre.ru',  3, 1),
-    ('ivanov_k',
-     '$2b$12$examplehashUSR1111111111111111111111111111111111111111',
-     'Козлов Дмитрий Андреевич', '+79004445566', 'kozlov@example.com',  4, 1),
-    ('smirnova_a',
-     '$2b$12$examplehashUSR2222222222222222222222222222222222222222',
-     'Смирнова Анна Викторовна', '+79005556677', 'smirnova@example.com',4, 1);
-
--- ────────────────────────────────────────────────────────────
---  ORDERS & TICKETS
--- ────────────────────────────────────────────────────────────
-
--- Order 1: kozlov buys 2 tickets for Лебединое озеро (performance 1, seats 1 and 2 row 1)
-INSERT INTO orders (buyer_user_id, payment_method_id, paid_at, email_to, payment_status, total_amount) VALUES
-    (4, 2, '2026-06-25 14:30:00', 'kozlov@example.com', 'paid', 3000.00);
-
-INSERT INTO payments (order_id, method_id, status, transaction_ref) VALUES
-    (1, 2, 'captured', 'TXN-2026-001');
-
-INSERT INTO ticket (performance_id, seat_id, order_id, reserved_until, status, price) VALUES
-    (1, 1, 1, NULL, 'sold', 1500.00),
-    (1, 2, 1, NULL, 'sold', 1500.00);
-
--- Order 2: smirnova reserves 1 ticket for Щелкунчик (performance 3, seat in Малый зал)
-INSERT INTO orders (buyer_user_id, payment_method_id, email_to, payment_status, total_amount) VALUES
-    (5, 3, 'smirnova@example.com', 'pending', 1200.00);
-
-INSERT INTO payments (order_id, method_id, status) VALUES
-    (2, 3, 'initiated');
-
-INSERT INTO ticket (performance_id, seat_id, order_id, reserved_until, status, price) VALUES
-    (3, 101, 2, '2026-07-04 20:00:00', 'reserved', 1200.00);
-
--- ────────────────────────────────────────────────────────────
---  AUTH LOG
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO auth_log (user_id, attempted_login, ip, user_agent, is_success, reason) VALUES
-    (1,    'admin',      '192.168.1.1',  'Mozilla/5.0 (Windows NT 10.0)',  1, NULL),
-    (NULL, 'hacker',     '10.0.0.99',    'curl/7.68.0',                    0, 'User not found'),
-    (4,    'ivanov_k',   '192.168.1.55', 'Mozilla/5.0 (Windows NT 10.0)',  1, NULL),
-    (5,    'smirnova_a', '192.168.1.72', 'Mozilla/5.0 (Macintosh)',        1, NULL);
-
--- ────────────────────────────────────────────────────────────
---  EMAIL QUEUE
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO email_queue (to_email, subject, body, sent_at, is_sent) VALUES
-    ('kozlov@example.com',   'Ваши билеты на Лебединое озеро',
-     'Здравствуйте! Ваш заказ №1 подтверждён. Билеты прикреплены к письму.',
-     '2026-06-25 14:31:00', 1),
-    ('smirnova@example.com', 'Бронирование билета на Щелкунчик',
-     'Здравствуйте! Ваш билет на Щелкунчик забронирован до 2026-07-04 20:00.',
-     NULL, 0);
-
--- ────────────────────────────────────────────────────────────
---  BACKUP LOG
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO backup_log (started_at, finished_at, status, location, message) VALUES
-    ('2026-06-28 03:00:00', '2026-06-28 03:04:22', 'success',
-     '/backups/theatre_2026-06-28.sql.gz', NULL),
-    ('2026-06-29 03:00:00', '2026-06-29 03:05:01', 'success',
-     '/backups/theatre_2026-06-29.sql.gz', NULL),
-    ('2026-06-30 03:00:00', NULL, 'running', NULL, NULL);
-
--- ────────────────────────────────────────────────────────────
---  INTEGRATION
--- ────────────────────────────────────────────────────────────
-
-INSERT INTO integration (provider, config) VALUES
-    ('smtp_mail', '{"host":"smtp.theatre.ru","port":587,"user":"noreply@theatre.ru"}'),
-    ('sms_gate',  '{"url":"https://sms.example.ru/api","api_key":"SECRET"}');
+-- ── Notifications ─────────────────────────────────────────
+INSERT INTO notifications (user_id, type, message) VALUES
+    (4, 'appointment_confirmed', 'Ваша запись на 10 июля в 10:00 подтверждена.'),
+    (5, 'appointment_confirmed', 'Ваша запись на 11 июля в 14:00 подтверждена.');

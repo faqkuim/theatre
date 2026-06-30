@@ -1,31 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="grid">
+
+{# ── Slider ─────────────────────────────────────── #}
+<div class="grid" style="margin-bottom:8px">
   <div class="col-12">
-    <div class="slider" aria-label="Слайдер спектаклей">
-      <div class="slide active"><img src="{{ url_for('static', filename='img/slider1.jpg') }}" alt="Спектакль 1" loading="eager"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider2.jpg') }}" alt="Спектакль 2" loading="lazy"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider3.jpg') }}" alt="Спектакль 3" loading="lazy"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider4.jpg') }}" alt="Спектакль 4" loading="lazy"></div>
+    <div class="slider" aria-label="Фото салона">
+      <div class="slide active">
+        <img src="{{ url_for('static', filename='img/slider1.jpg') }}" alt="Салон 1" loading="eager">
+        <div class="slide-overlay"></div>
+      </div>
+      <div class="slide">
+        <img src="{{ url_for('static', filename='img/slider2.jpg') }}" alt="Салон 2" loading="lazy">
+        <div class="slide-overlay"></div>
+      </div>
+      <div class="slide">
+        <img src="{{ url_for('static', filename='img/slider3.jpg') }}" alt="Салон 3" loading="lazy">
+        <div class="slide-overlay"></div>
+      </div>
+      <div class="slide">
+        <img src="{{ url_for('static', filename='img/slider4.jpg') }}" alt="Салон 4" loading="lazy">
+        <div class="slide-overlay"></div>
+      </div>
       <div class="controls">
         <button class="btn secondary" onclick="prevSlide()" aria-label="Предыдущий">&#8592;</button>
         <button class="btn secondary" onclick="nextSlide()" aria-label="Следующий">&#8594;</button>
       </div>
       <div class="slider-dots" role="tablist" aria-label="Слайды">
-        <button class="slider-dot active" onclick="showSlide(0)" role="tab" aria-label="Слайд 1"></button>
-        <button class="slider-dot" onclick="showSlide(1)" role="tab" aria-label="Слайд 2"></button>
-        <button class="slider-dot" onclick="showSlide(2)" role="tab" aria-label="Слайд 3"></button>
-        <button class="slider-dot" onclick="showSlide(3)" role="tab" aria-label="Слайд 4"></button>
+        <button class="slider-dot active" onclick="showSlide(0)" role="tab" aria-label="1"></button>
+        <button class="slider-dot" onclick="showSlide(1)" role="tab" aria-label="2"></button>
+        <button class="slider-dot" onclick="showSlide(2)" role="tab" aria-label="3"></button>
+        <button class="slider-dot" onclick="showSlide(3)" role="tab" aria-label="4"></button>
       </div>
     </div>
   </div>
-  <div class="col-12 card">
-    <h2 style="margin-top:0">Добро пожаловать</h2>
-    <p>Информационная система «Театр»: регистрация, авторизация, заявки на билеты и административная панель управления.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-      <a class="btn" href="{{ url_for('register') }}">Зарегистрироваться</a>
-      <a class="btn secondary" href="{{ url_for('login') }}">Войти</a>
-    </div>
+</div>
+
+{# ── Hero ───────────────────────────────────────── #}
+<div class="grid">
+  <div class="col-12 card" style="text-align:center;padding:28px 18px">
+    <h1 style="margin:0 0 8px;font-size:1.7rem">Ваша красота — наша забота</h1>
+    <p style="opacity:.65;margin:0 0 18px">Профессиональные мастера, широкий спектр услуг, удобная онлайн-запись</p>
+    {% if session.get('user_id') %}
+      <a class="btn" href="{{ url_for('dashboard') }}">Записаться</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('register') }}">Записаться онлайн</a>
+      <a class="btn secondary" href="{{ url_for('login') }}" style="margin-left:8px">Войти</a>
+    {% endif %}
   </div>
 </div>
+
+{# ── Services ───────────────────────────────────── #}
+<h2 class="section-title">Наши услуги</h2>
+{% for cat, items in services | groupby('category') %}
+  <div class="cat-label">{{ cat }}</div>
+  <div class="grid" style="margin-bottom:16px">
+    {% for s in items %}
+    <div class="col-12 col-4 card service-card">
+      <div class="service-name">{{ s.name }}</div>
+      <p class="service-desc">{{ s.description }}</p>
+      <div class="service-meta">
+        <span class="service-price">{{ s.price | int }}&thinsp;&#8381;</span>
+        <span class="service-dur">{{ s.duration }}&thinsp;мин</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+
+{# ── Masters ────────────────────────────────────── #}
+<h2 class="section-title">Наши мастера</h2>
+<div class="grid">
+  {% for m in masters %}
+  <div class="col-12 col-6 card" style="display:flex;gap:14px;align-items:flex-start">
+    <div class="master-avatar" style="flex-shrink:0">{{ m.full_name[0] }}</div>
+    <div>
+      <div style="font-weight:700;font-size:1rem">{{ m.full_name }}</div>
+      <div class="master-spec">{{ m.specialization }}</div>
+      {% if m.bio %}<p style="margin:0;font-size:.85rem;opacity:.65">{{ m.bio }}</p>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{# ── Reviews ────────────────────────────────────── #}
+{% if reviews %}
+<h2 class="section-title">Отзывы клиентов</h2>
+<div class="grid">
+  {% for r in reviews %}
+  <div class="col-12 col-4 card">
+    <div class="star-disp">
+      {% for _ in range(r.rating) %}&#9733;{% endfor %}<span class="empty">{% for _ in range(5 - r.rating) %}&#9733;{% endfor %}</span>
+    </div>
+    <p class="review-body">&laquo;{{ r.body }}&raquo;</p>
+    <p class="review-meta">
+      {{ r.full_name }}{% if r.master_name %} &middot; {{ r.master_name }}{% endif %}
+    </p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 {% endblock %}

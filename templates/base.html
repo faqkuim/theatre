@@ -1,4 +1,4 @@
-{% set title = title or "Theatre MVP" %}
+{% set title = title or "Студия красоты" %}
 <!doctype html>
 <html lang="ru">
 <head>
@@ -10,22 +10,24 @@
 </head>
 <body>
   <header class="header wrap">
-    <div class="brand">🎭 Theatre MVP</div>
+    <div class="brand">Студия красоты</div>
     <nav class="nav">
       <a href="{{ url_for('index') }}">Главная</a>
       {% if session.get('user_id') %}
-        <a href="{{ url_for('dashboard') }}">Личный кабинет</a>
-        {% if session.get('is_admin') %}<a href="{{ url_for('admin') }}">Админ</a>{% endif %}
+        <a href="{{ url_for('dashboard') }}">Запись</a>
+        {% if session.get('is_admin') %}
+          <a href="{{ url_for('admin') }}">Панель</a>
+        {% endif %}
         <a href="{{ url_for('logout') }}">Выход</a>
       {% else %}
-        <a href="{{ url_for('login') }}">Вход</a>
+        <a href="{{ url_for('login') }}">Войти</a>
         <a href="{{ url_for('register') }}">Регистрация</a>
       {% endif %}
     </nav>
   </header>
   <main class="wrap">{% block content %}{% endblock %}</main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <footer class="wrap" style="opacity:.7">© 2025 Theatre MVP</footer>
+  <footer class="wrap">&copy; 2025 Студия красоты</footer>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

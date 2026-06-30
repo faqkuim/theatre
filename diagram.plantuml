@@ -1,4 +1,4 @@
-@startuml theatre_er
+@startuml beauty_er
 
 ' ════════════════════════════════════════════
 '  LAYOUT
@@ -32,129 +32,154 @@ skinparam arrow {
 }
 
 ' ════════════════════════════════════════════
-'  ENTITIES  (точно по PDF — 13 таблиц)
-'  * = PK   # = FK
+'  ENTITIES  (* = PK, # = FK)
 ' ════════════════════════════════════════════
 
-entity "admin_setting" {
-  * id      : int <>
-  --
-  * skey    : varchar(100)
-  svalue    : text
-}
-
-entity "auth_log" {
-  * id              : bigint <>
-  --
-  # user_id         : bigint
-  created_at        : datetime
-  attempted_login   : varchar(64)
-  ip                : varchar(64)
-  user_agent        : varchar(255)
-  is_success        : tinyint(1)
-  reason            : varchar(255)
-}
-
-entity "backup_log" {
-  * id          : bigint <>
-  --
-  started_at    : datetime
-  finished_at   : datetime
-  status        : varchar(32)
-  location      : varchar(255)
-  message       : varchar(255)
-}
-
-entity "email_queue" {
-  * id       : bigint <>
-  --
-  to_email   : varchar(255)
-  subject    : varchar(255)
-  body       : text
-  sent_at    : datetime
-  is_sent    : tinyint(1)
-  error_msg  : varchar(255)
-}
-
-entity "hall" {
-  * id    : int <>
-  --
-  name    : varchar(120)
-}
-
-entity "integration" {
-  * id       : int <>
-  --
-  provider   : varchar(64)
-  config     : text
-}
-
-entity "payment_method" {
-  * id    : int <>
-  --
-  * code  : varchar(32) <>
-  name    : varchar(64)
-}
-
-entity "permissions" {
-  * id    : int <>
-  --
-  * code  : varchar(64) <>
-  name    : varchar(128)
-}
-
-entity "production" {
-  * id           : int <>
-  --
-  title          : varchar(200)
-  genre          : varchar(80)
-  description    : text
-  duration_min   : int
-  age_rating     : varchar(16)
-}
-
 entity "roles" {
-  * id    : int <>
+  * id   : int <>
   --
-  * code  : varchar(50) <>
-  name    : varchar(100)
-}
-
-entity "role_permissions" {
-  # role_id       : int <>
-  # permission_id : int <>
-}
-
-entity "seat_zone" {
-  * id         : int <>
-  --
-  # hall_id    : int <>
-  name         : varchar(80)
-  price_mult   : decimal(6,2)
+  * code : varchar(50) <>
+  name   : varchar(100)
 }
 
 entity "users" {
   * id            : bigint <>
   --
   * login         : varchar(64) <>
+  * email         : varchar(255) <>
   password_hash   : varchar(255)
   full_name       : varchar(200)
   phone           : varchar(20)
-  email           : varchar(255)
   # role_id       : int <>
   is_active       : tinyint(1)
   created_at      : datetime
   updated_at      : datetime
 }
 
+entity "categories" {
+  * id   : int <>
+  --
+  name   : varchar(80)
+  sort   : tinyint
+}
+
+entity "masters" {
+  * id             : int <>
+  --
+  # user_id        : bigint <>
+  full_name        : varchar(200)
+  specialization   : varchar(200)
+  bio              : text
+  photo_url        : varchar(255)
+  experience_yrs   : tinyint
+  is_active        : tinyint(1)
+}
+
+entity "services" {
+  * id          : int <>
+  --
+  # category_id : int <>
+  name          : varchar(200)
+  description   : text
+  price         : decimal(10,2)
+  duration      : smallint
+  is_active     : tinyint(1)
+}
+
+entity "master_services" {
+  # master_id  : int <>
+  # service_id : int <>
+}
+
+entity "working_hours" {
+  * id          : int <>
+  --
+  # master_id   : int <>
+  day_of_week   : tinyint
+  start_time    : time
+  end_time      : time
+}
+
+entity "appointments" {
+  * id         : bigint <>
+  --
+  # user_id    : bigint <>
+  # master_id  : int <>
+  # service_id : int <>
+  appt_date    : date
+  appt_time    : time
+  status       : enum
+  comment      : text
+  created_at   : datetime
+  updated_at   : datetime
+}
+
+entity "reviews" {
+  * id          : bigint <>
+  --
+  # user_id     : bigint <>
+  # master_id   : int
+  # service_id  : int
+  rating        : tinyint
+  body          : text
+  is_approved   : tinyint(1)
+  created_at    : datetime
+}
+
+entity "loyalty_points" {
+  * id         : bigint <>
+  --
+  # user_id    : bigint <>
+  points       : int
+  reason       : varchar(255)
+  created_at   : datetime
+}
+
+entity "notifications" {
+  * id         : bigint <>
+  --
+  # user_id    : bigint <>
+  type         : varchar(64)
+  message      : text
+  is_read      : tinyint(1)
+  created_at   : datetime
+}
+
+entity "auth_log" {
+  * id         : bigint <>
+  --
+  # user_id    : bigint
+  action       : varchar(64)
+  ip           : varchar(64)
+  user_agent   : varchar(255)
+  created_at   : datetime
+}
+
+entity "salon_settings" {
+  * id    : int <>
+  --
+  * skey  : varchar(100) <>
+  svalue  : text
+}
+
 ' ════════════════════════════════════════════
-'  RELATIONSHIPS  (по PDF — ссылки из phpMyAdmin)
+'  RELATIONSHIPS
 ' ════════════════════════════════════════════
 
-roles       ||--o{ users            : "role_id -> roles.id"
-roles       ||--o{ role_permissions : "role_id -> roles.id"
-permissions ||--o{ role_permissions : "permission_id -> permissions.id"
-users       ||--o{ auth_log         : "user_id -> users.id"
-hall        ||--o{ seat_zone        : "hall_id -> hall.id"
+roles          ||--o{ users           : "role_id"
+users          ||--o{ masters         : "user_id"
+categories     ||--o{ services        : "category_id"
+masters        ||--o{ master_services : "master_id"
+services       ||--o{ master_services : "service_id"
+masters        ||--o{ working_hours   : "master_id"
+users          ||--o{ appointments    : "user_id"
+masters        ||--o{ appointments    : "master_id"
+services       ||--o{ appointments    : "service_id"
+users          ||--o{ reviews         : "user_id"
+masters        |o--o{ reviews         : "master_id"
+services       |o--o{ reviews         : "service_id"
+users          ||--o{ loyalty_points  : "user_id"
+users          ||--o{ notifications   : "user_id"
+users          ||--o{ auth_log        : "user_id"
 
 @enduml
