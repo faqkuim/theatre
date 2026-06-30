@@ -4,6 +4,7 @@
   --text: #e6ecff;
   --accent: #6aa0ff;
   --bad: #ef4444;
+  --good: #22c55e;
 }
 
 * {
@@ -21,6 +22,10 @@ html, body {
 a {
   color: var(--accent);
   text-decoration: none;
+  transition: opacity .15s;
+}
+a:hover {
+  opacity: .82;
 }
 
 a:focus, button:focus, input:focus, select:focus {
@@ -41,112 +46,197 @@ a:focus, button:focus, input:focus, select:focus {
   padding: 12px 0;
 }
 
-.nav a {
-  margin-left: 12px;
-  opacity: .9;
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: .02em;
 }
 
+.nav a {
+  margin-left: 12px;
+}
+
+/* ── Card ────────────────────────────────────────── */
 .card {
   background: var(--card);
   border: 1px solid rgba(255, 255, 255, .06);
   border-radius: 16px;
   padding: 16px;
+  transition: border-color .22s;
+}
+.card:hover {
+  border-color: rgba(106, 160, 255, .18);
 }
 
+/* ── Grid ────────────────────────────────────────── */
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 16px;
 }
 
-.col-4 { grid-column: span 4; }
-.col-6 { grid-column: span 6; }
+.col-4  { grid-column: span 4; }
+.col-6  { grid-column: span 6; }
 .col-12 { grid-column: span 12; }
 
+/* ── Buttons ─────────────────────────────────────── */
 .btn {
   background: var(--accent);
   color: #0b0d12;
   border: none;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 12px;
   cursor: pointer;
+  font-weight: 600;
+  font-size: .95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter .18s, transform .15s, box-shadow .18s;
+}
+.btn:hover {
+  filter: brightness(1.14);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(106, 160, 255, .28);
+}
+.btn:active {
+  transform: translateY(0);
+  filter: brightness(.92);
+  box-shadow: none;
 }
 
 .btn.secondary {
   background: #2b3142;
   color: #e6ecff;
 }
+.btn.secondary:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .4);
+}
 
 .btn.danger {
   background: var(--bad);
 }
+.btn.danger:hover {
+  box-shadow: 0 4px 14px rgba(239, 68, 68, .35);
+}
+
+/* ── Forms ───────────────────────────────────────── */
+label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-size: .875rem;
+  opacity: .75;
+}
 
 input, select {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #2b3142;
+  border: 1.5px solid #2b3142;
   background: #101521;
   color: #e6ecff;
+  font-size: .95rem;
+  transition: border-color .18s, box-shadow .18s;
+  margin-bottom: 2px;
+}
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(106, 160, 255, .12);
 }
 
+.field-error {
+  display: block;
+  font-size: .78rem;
+  color: #ff8a8a;
+  min-height: 1.1em;
+  margin-bottom: 2px;
+  transition: opacity .2s;
+}
+
+.input-invalid {
+  border-color: var(--bad) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .12) !important;
+}
+
+/* ── Table ───────────────────────────────────────── */
 .table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 0 6px;
 }
 
-.table th, .table td {
+.table th {
+  padding: 6px 12px;
+  text-align: left;
+  font-size: .78rem;
+  opacity: .55;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.table td {
   padding: 10px 12px;
   background: #121726;
+  transition: filter .15s;
 }
 
+.table tbody tr:hover td {
+  filter: brightness(1.22);
+}
+
+/* ── Status badges ───────────────────────────────── */
 .status {
-  padding: 4px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: .85rem;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
 }
-
-.status.new { background: #0b3b59; color: #8ecaff; }
+.status.new       { background: #0b3b59; color: #8ecaff; }
 .status.confirmed { background: #0d3b2a; color: #39e39f; }
 .status.cancelled { background: #3b0d11; color: #ff8a8a; }
 
+/* ── Toast ───────────────────────────────────────── */
 .toast {
   position: fixed;
   right: 16px;
   bottom: 16px;
-  background: #101521;
+  background: #1a2035;
   border: 1px solid #2b3142;
-  padding: 12px 14px;
+  padding: 12px 20px;
   border-radius: 12px;
+  font-size: .9rem;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(12px);
   transition: opacity .25s, transform .25s;
+  z-index: 999;
+  pointer-events: none;
 }
-
 .toast.show {
   opacity: 1;
   transform: none;
 }
 
+/* ── Slider ──────────────────────────────────────── */
 .slider {
   position: relative;
   height: 320px;
   border-radius: 16px;
   overflow: hidden;
+  user-select: none;
 }
 
 .slide {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 1s;
+  transition: opacity .8s ease;
 }
-
 .slide.active {
   opacity: 1;
 }
-
 .slide img {
   width: 100%;
   height: 100%;
@@ -160,9 +250,71 @@ input, select {
   inset: 0;
   padding: 12px;
   align-items: center;
+  pointer-events: none;
+}
+.slider .controls .btn {
+  pointer-events: all;
 }
 
-@media (max-width: 420px) {
+.slider-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+}
+.slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .35);
+  cursor: pointer;
+  transition: background .25s, transform .2s;
+  border: none;
+  padding: 0;
+}
+.slider-dot.active {
+  background: #fff;
+  transform: scale(1.3);
+}
+.slider-dot:focus {
+  outline: 2px solid var(--accent);
+}
+
+/* ── Pagination ──────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.pagination a,
+.pagination span {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #1a2035;
+  font-size: .85rem;
+  color: var(--text);
+  transition: background .15s;
+}
+.pagination a:hover {
+  background: #2b3142;
+  opacity: 1;
+}
+.pagination .pg-current {
+  background: var(--accent);
+  color: #0b0d12;
+  font-weight: 700;
+}
+.pagination .pg-disabled {
+  opacity: .3;
+  pointer-events: none;
+}
+
+/* ── Mobile 390 x 844 ────────────────────────────── */
+@media (max-width: 390px) {
   .grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
@@ -171,6 +323,31 @@ input, select {
     grid-column: span 4;
   }
   .slider {
-    height: 220px;
+    height: 200px;
+  }
+  .btn {
+    padding: 12px 16px;
+    font-size: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+  input, select {
+    padding: 12px;
+    font-size: 1rem;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .nav a {
+    margin-left: 0;
+    margin-right: 12px;
+  }
+  .table {
+    font-size: .75rem;
+  }
+  .table th, .table td {
+    padding: 8px 6px;
   }
 }

@@ -1,48 +1,94 @@
 {% extends "base.html" %}
 {% block content %}
+{% set status_label = {'new': 'Новая', 'confirmed': 'Подтверждена', 'cancelled': 'Отменена'} %}
 <div class="grid">
   <div class="col-12 card">
-    <h2>Админ‑панель</h2>
-    <form method="get" class="grid">
-      <div class="col-4">
-        <label for="status">Фильтр по статусу</label>
-        <select id="status" name="status">
+    <h2 style="margin-top:0">Админ-панель</h2>
+    <form method="get" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div>
+        <label for="status" style="margin-top:0">Фильтр по статусу</label>
+        <select id="status" name="status" style="width:auto;min-width:160px">
           <option value="">Все</option>
-          {% for s in ['new','confirmed','cancelled'] %}
-          <option value="{{ s }}" {% if request.args.get('status')==s %}selected{% endif %}>{{ s }}</option>
+          {% for s, lbl in [('new','Новые'), ('confirmed','Подтверждённые'), ('cancelled','Отменённые')] %}
+          <option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ lbl }}</option>
           {% endfor %}
         </select>
       </div>
-      <div class="col-4" style="align-self:end"><button class="btn secondary" type="submit">Применить</button></div>
+      <button class="btn secondary" type="submit">Применить</button>
+      {% if request.args.get('status') %}
+      <a class="btn secondary" href="{{ url_for('admin') }}">Сбросить</a>
+      {% endif %}
+      <span style="opacity:.5;font-size:.85rem;align-self:center">Всего: {{ total }}</span>
     </form>
   </div>
+
   <div class="col-12 card">
-    <h3>Все заявки</h3>
-    <table class="table">
-      <thead>
-        <tr><th>#</th><th>Пользователь</th><th>Спектакль</th><th>Дата</th><th>Кол-во</th><th>Оплата</th><th>Статус</th><th>Действие</th></tr>
-      </thead>
-      <tbody>
-        {% for r in rows %}
-        <tr>
-          <td>{{ r.id }}</td>
-          <td>{{ r.full_name }}<br><small>{{ r.email }}</small></td>
-          <td>{{ r.title }}</td>
-          <td>{{ r.starts_at }}</td>
-          <td>{{ r.qty }}</td>
-          <td>{{ r.payment_method }}</td>
-          <td><span class="status {{ r.status }}">{{ r.status }}</span></td>
-          <td>
-            <form method="post" action="{{ url_for('set_status', req_id=r.id) }}" style="display:flex;gap:6px">
-              <input type="hidden" name="from" value="{{ request.full_path }}">
-              <button class="btn" name="status" value="confirmed" type="submit">Подтвердить</button>
-              <button class="btn danger" name="status" value="cancelled" type="submit">Отменить</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <h3 style="margin-top:0">Все заявки</h3>
+    <div style="overflow-x:auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th><th>Пользователь</th><th>Спектакль</th>
+            <th>Дата</th><th>Кол.</th><th>Оплата</th>
+            <th>Статус</th><th>Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.full_name }}<br><small style="opacity:.6">{{ r.email }}</small></td>
+            <td>{{ r.title }}</td>
+            <td style="white-space:nowrap">{{ r.starts_at[:10] }}</td>
+            <td>{{ r.qty }}</td>
+            <td>{{ r.payment_method }}</td>
+            <td><span class="status {{ r.status }}">{{ status_label.get(r.status, r.status) }}</span></td>
+            <td>
+              <form method="post" action="{{ url_for('set_status', req_id=r.id) }}"
+                    style="display:flex;gap:6px;flex-wrap:wrap">
+                <input type="hidden" name="from" value="{{ request.full_path }}">
+                <button class="btn" name="status" value="confirmed" type="submit"
+                        data-toast="Заявка #{{ r.id }} подтверждена">
+                  Подтвердить
+                </button>
+                <button class="btn danger" name="status" value="cancelled" type="submit"
+                        data-toast="Заявка #{{ r.id }} отменена">
+                  Отменить
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not rows %}
+          <tr><td colspan="8" style="text-align:center;opacity:.5;padding:24px">Заявок нет</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <nav class="pagination" aria-label="Страницы">
+      {% if page > 1 %}
+      <a href="{{ url_for('admin', page=page-1) }}{% if status_filter %}&status={{ status_filter }}{% endif %}">&#8249; Назад</a>
+      {% else %}
+      <span class="pg-disabled">&#8249; Назад</span>
+      {% endif %}
+
+      {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+        <span class="pg-current">{{ p }}</span>
+        {% else %}
+        <a href="{{ url_for('admin', page=p) }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page < total_pages %}
+      <a href="{{ url_for('admin', page=page+1) }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Вперёд &#8250;</a>
+      {% else %}
+      <span class="pg-disabled">Вперёд &#8250;</span>
+      {% endif %}
+    </nav>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

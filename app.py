@@ -213,25 +213,43 @@ def create_request(user):
 @admin_required
 def admin(user):
     db = get_db()
-    where = ''
+    status_filter = request.args.get('status') or ''
     params = []
-    status = request.args.get('status')
-    if status:
+    where = ''
+    if status_filter:
         where = 'WHERE r.status=?'
-        params.append(status)
+        params.append(status_filter)
+
+    per_page = 10
+    page = max(1, request.args.get('page', 1, type=int))
+
+    total = db.execute(
+        f'SELECT COUNT(*) FROM requests r {where}', params
+    ).fetchone()[0]
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = min(page, total_pages)
+
     rows = db.execute(
-        '''SELECT r.id, r.qty, r.payment_method, r.status,
+        f'''SELECT r.id, r.qty, r.payment_method, r.status,
                   u.full_name, u.email,
                   p.title, pf.starts_at
            FROM requests r
            JOIN users u ON u.id=r.user_id
            JOIN performances pf ON pf.id=r.performance_id
            JOIN productions p ON p.id=pf.production_id
-           ''' + where + '''
-           ORDER BY r.created_at DESC''',
-        params,
+           {where}
+           ORDER BY r.created_at DESC
+           LIMIT ? OFFSET ?''',
+        params + [per_page, (page - 1) * per_page],
     ).fetchall()
-    return render_template('admin.html', rows=rows)
+    return render_template(
+        'admin.html',
+        rows=rows,
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        status_filter=status_filter,
+    )
 
 
 @app.route('/admin/set-status/<int:req_id>', methods=['POST'])

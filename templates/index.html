@@ -3,23 +3,29 @@
 <div class="grid">
   <div class="col-12">
     <div class="slider" aria-label="Слайдер спектаклей">
-      <div class="slide active"><img src="{{ url_for('static', filename='img/slider1.jpg') }}" alt="Сцена 1"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider2.jpg') }}" alt="Сцена 2"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider3.jpg') }}" alt="Сцена 3"></div>
-      <div class="slide"><img src="{{ url_for('static', filename='img/slider4.jpg') }}" alt="Сцена 4"></div>
+      <div class="slide active"><img src="{{ url_for('static', filename='img/slider1.jpg') }}" alt="Спектакль 1" loading="eager"></div>
+      <div class="slide"><img src="{{ url_for('static', filename='img/slider2.jpg') }}" alt="Спектакль 2" loading="lazy"></div>
+      <div class="slide"><img src="{{ url_for('static', filename='img/slider3.jpg') }}" alt="Спектакль 3" loading="lazy"></div>
+      <div class="slide"><img src="{{ url_for('static', filename='img/slider4.jpg') }}" alt="Спектакль 4" loading="lazy"></div>
       <div class="controls">
-        <button class="btn secondary" onclick="prevSlide()" aria-label="Предыдущий">←</button>
-        <button class="btn secondary" onclick="nextSlide()" aria-label="Следующий">→</button>
+        <button class="btn secondary" onclick="prevSlide()" aria-label="Предыдущий">&#8592;</button>
+        <button class="btn secondary" onclick="nextSlide()" aria-label="Следующий">&#8594;</button>
+      </div>
+      <div class="slider-dots" role="tablist" aria-label="Слайды">
+        <button class="slider-dot active" onclick="showSlide(0)" role="tab" aria-label="Слайд 1"></button>
+        <button class="slider-dot" onclick="showSlide(1)" role="tab" aria-label="Слайд 2"></button>
+        <button class="slider-dot" onclick="showSlide(2)" role="tab" aria-label="Слайд 3"></button>
+        <button class="slider-dot" onclick="showSlide(3)" role="tab" aria-label="Слайд 4"></button>
       </div>
     </div>
   </div>
   <div class="col-12 card">
-    <h2>Добро пожаловать</h2>
-    <p>Минимально жизнеспособная ИС «Театр»: регистрация/авторизация, заявки на билеты, админ‑панель.</p>
-    <p>
+    <h2 style="margin-top:0">Добро пожаловать</h2>
+    <p>Информационная система «Театр»: регистрация, авторизация, заявки на билеты и административная панель управления.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
       <a class="btn" href="{{ url_for('register') }}">Зарегистрироваться</a>
       <a class="btn secondary" href="{{ url_for('login') }}">Войти</a>
-    </p>
+    </div>
   </div>
 </div>
 {% endblock %}
