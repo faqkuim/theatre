@@ -1,10 +1,10 @@
 -- ════════════════════════════════════════════════════════════
---  Salon Beauty — MySQL schema
+--  Salon — MySQL schema
 -- ════════════════════════════════════════════════════════════
 
-CREATE DATABASE IF NOT EXISTS beauty
+CREATE DATABASE IF NOT EXISTS salon
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE beauty;
+USE salon;
 
 -- ── 1. roles ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS roles (

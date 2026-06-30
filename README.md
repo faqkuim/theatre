@@ -56,7 +56,7 @@ python app.py
 ## Структура проекта
 
 ```
-theatre/
+salon/
 ├── app.py               # Flask-приложение
 ├── sql/
 │   ├── schema.sql       # Схема SQLite

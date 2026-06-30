@@ -1,8 +1,8 @@
 -- ════════════════════════════════════════════════════════════
---  Salon Beauty — sample data (MySQL)
+--  Salon — sample data (MySQL)
 -- ════════════════════════════════════════════════════════════
 
-USE beauty;
+USE salon;
 
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE auth_log;
